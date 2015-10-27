@@ -2,7 +2,7 @@
 
 ### Usage
 
-The following code snippets are implemented at [demo/gulpfile.js](demo/gulpfile.js).
+Some of the following code snippets are implemented at [demo/gulpfile.js](demo/gulpfile.js).
 
 ```js
 var gulp = require('gulp');
@@ -42,23 +42,31 @@ gulp.src('src/main.js')
     }));
 ```
 
-###### jspm bunlde arithmetics
+###### Options
 
 ```js
 gulp.src('src/main.js')
-    .pipe(gulp_jspm({arithmetic: '- message'})) // excludes message.js from bundle
+    .pipe(gulp_jspm({arithmetic: '- message'})) // exclude message.js from bundle
     .pipe(gulp.dest('build/'));
-```
 
-###### Self Executing Bundle
-
-```js
 gulp.src('src/main.js')
     .pipe(gulp_jspm({selfExecutingBundle: true})) // `jspm bundle-sfx main`
     .pipe(gulp.dest('build/'));
+
+gulp.src('src/main.jsx')
+    .pipe(gulp_jspm({plugin: true})) // `jspm bundle main.jsx!`
+    .pipe(gulp.dest('build/'));
+gulp.src('src/main.jsx')
+    .pipe(gulp_jspm({plugin: 'jsx'})) // `jspm bundle main.jsx!jsx`
+    .pipe(gulp.dest('build/'));
+
+// all other options given to gulp-jspm are passed on to jspm, e.g.
+gulp.src('src/main.js')
+    .pipe(gulp_jspm({inject: true})) // `jspm bundle main --inject`
+    .pipe(gulp.dest('build/'));
 ```
 
-##### Run Gulpfile Demo
+### Run Gulpfile Demo
 
 To run the code snippets above execute following commands.
 
@@ -68,7 +76,9 @@ cd gulp-jspm/
 npm install
 cd demo/
 npm install
+npm install -g jspm
 npm install -g gulp
+jspm install
 gulp
 gulp sourcemap
 gulp test

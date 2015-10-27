@@ -40,9 +40,30 @@ module.exports = function(opts){
         .then(function(tmp_file){
             return (
                 jspm[opts.selfExecutingBundle?'bundleSFX':'bundle'](
-                    file.path + (opts.arithmetic?' '+opts.arithmetic.trim():'') ,
+                    (function(){
+                        var jspm_input = file.relative;
+                        if( opts.plugin ) {
+                            jspm_input += '!';
+                            if( opts.plugin.constructor === String ) {
+                                jspm_input += opts.plugin;
+                            }
+                        }
+                        if( opts.arithmetic ) {
+                            jspm_input += ' ' + opts.arithmetic.trim();
+                        }
+                        return jspm_input;
+                    })() ,
                     tmp_file.path ,
-                    {sourceMaps: enable_source_map} )
+                    (function(){
+                        var jspm_opts = {};
+                        for(var i in opts) jspm_opts[i] = opts[i];
+                        jspm_opts.sourceMaps = jspm_opts.sourceMaps || enable_source_map;
+                        delete jspm_opts.plugin;
+                        delete jspm_opts.arithmetic;
+                        delete jspm_opts.selfExecutingBundle;
+                        return jspm_opts;
+                    })()
+                )
                 .then(function(){
                     return tmp_file.path;
                 })
