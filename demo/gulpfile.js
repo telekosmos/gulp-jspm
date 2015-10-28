@@ -14,7 +14,7 @@ gulp.task('sourcemap', function() {
 
   return gulp.src('src/main.js')
     .pipe(sourcemaps.init())
-    .pipe(gulp_jspm())
+    .pipe(gulp_jspm({inject: true}))
     .pipe(sourcemaps.write('.', {includeContent: false}))
     .pipe(gulp.dest('build/'));
 });

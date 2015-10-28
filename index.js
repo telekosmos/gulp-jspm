@@ -24,13 +24,6 @@ module.exports = function (opts) {
 			return path.join(path.dirname(file.path), basename);
 		})();
 
-		var tempBundleFile = (function(pathname) {
-			var temp = pathname.split('/');
-			temp[temp.length-1] = '.'+temp[temp.length-1];
-			return temp.join('/');
-		})(bundleFilename);
-
-
 		if (file.isNull()) {
 			cb();
 			return;
@@ -42,6 +35,7 @@ module.exports = function (opts) {
 		}
 
 		var enable_source_map = !!file.sourceMap;
+		var injectOpt = !!opts.inject;
 
 		var push = this.push.bind(this);
 
@@ -62,12 +56,20 @@ module.exports = function (opts) {
 				else
 					configJsLoc = path.dirname(projLocation)+'/config.js';
 
-				return Promise.promisify(temp.open)('gulp-jspm__build.js');
-				/*
-				fs.openAsync(tempBundleFile, 'w+').then(function() {
-					return tempBundleFile;
+				// return Promise.promisify(temp.open)('gulp-jspm__build.js');
+
+				var tempBundleFile = (function(pathname) {
+					var auxName = pathname.split('/');
+					auxName[auxName.length-1] = '.'+auxName[auxName.length-1];
+					return auxName.join('/');
+				})(bundleFilename);
+
+				return fs.openAsync(tempBundleFile, 'w+').then(function() {
+					return {
+						path: tempBundleFile
+					};
 				})
-				*/
+
 			})
 			.then(function (tmp_file) {
 				return (
@@ -126,14 +128,14 @@ module.exports = function (opts) {
 						)
 					)
 				)
-					.then(function () {
-						return results;
-					});
-			})
+				.then(function () {
+					return results;
+				});
+			})/*
 			.then(function (results) {
 				temp.cleanup();
 				return results;
-			})
+			})*/
 			.then(function (results) {
 				var bundle_file =
 					new File({
@@ -159,7 +161,34 @@ module.exports = function (opts) {
 						});
 				}
 
-				return bundle_file;
+				// Modify config.js bundles if inject option
+				if (!injectOpt) {
+					return bundle_file;
+				}
+				else {
+					console.log('Updating config.js...');
+					return fs.readFileAsync(configJsLoc)
+						.then(function (data) {
+							var filename = bundleFilename.split('/').pop();
+							var replacement = data.toString().replace('".' + filename + '"', '"' + filename + '"');
+							return replacement;
+						})
+						.then(function (data) {
+							return fs.writeFileAsync(configJsLoc, data);
+						})
+						.then(function() {
+							return fs.unlinkAsync(results.temp_path)
+								.then(function() {
+									return fs.unlinkAsync(results.temp_path+'.map');
+								})
+						})
+						.then(function () {
+							return bundle_file;
+						})
+						.catch(function (err) {
+							console.log('ERR: ' + JSON.stringify(err));
+						});
+				}
 			})
 			.then(function (bundle_file) {
 				// timeout to stop Promise to catch errors
