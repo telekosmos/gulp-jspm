@@ -14,11 +14,20 @@ gulp.task('sourcemap', function() {
 
   return gulp.src('src/main.js')
     .pipe(sourcemaps.init())
-    .pipe(gulp_jspm({inject: true}))
+    .pipe(gulp_jspm())
     .pipe(sourcemaps.write('.', {includeContent: false}))
     .pipe(gulp.dest('build/'));
 });
 
+gulp.task('inject', function() {
+  var sourcemaps = require('gulp-sourcemaps');
+
+  return gulp.src('src/main.js')
+    .pipe(sourcemaps.init())
+    .pipe(gulp_jspm({inject: true}))
+    .pipe(sourcemaps.write('.', {includeContent: false}))
+    .pipe(gulp.dest('build/'));
+});
 
 gulp.task('test', function() {
   var assert = require('better-assert');
