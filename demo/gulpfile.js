@@ -15,7 +15,7 @@ gulp.task('sourcemap', function() {
   return gulp.src('src/main.js')
     .pipe(sourcemaps.init())
     .pipe(gulp_jspm())
-    .pipe(sourcemaps.write('.'))
+    .pipe(sourcemaps.write('.', {includeContent: false}))
     .pipe(gulp.dest('build/'));
 });
 
@@ -39,6 +39,7 @@ gulp.task('test', function() {
       assert(vinyl_file.relative === 'main.bundle.js');
       assert(vinyl_file.originalEntryPoint.relative === 'main.js');
     }));
+
 
   function pass(fct) {
     return require('through2').obj(function(file, enc, cb) {
