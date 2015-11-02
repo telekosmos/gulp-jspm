@@ -66,6 +66,8 @@ module.exports = function (opts) {
 					jspm[opts.selfExecutingBundle ? 'bundleSFX' : 'bundle'](
 						(function () {
 							var jspm_input = path.relative(jspmRoot, file.path);
+
+
 							if (opts.plugin) {
 								jspm_input += '!';
 								if (opts.plugin.constructor === String) {
@@ -75,7 +77,6 @@ module.exports = function (opts) {
 							if (opts.arithmetic) {
 								jspm_input += ' ' + opts.arithmetic.trim();
 							}
-
 							return jspm_input;
 						})(),
 						tmp_file.path,
@@ -89,9 +90,9 @@ module.exports = function (opts) {
 							return jspm_opts;
 						})()
 					)
-						.then(function () {
-							return tmp_file.path;
-						})
+					.then(function () {
+						return tmp_file.path;
+					})
 				);
 			})
 			.then(function (temp_path) {
@@ -119,25 +120,19 @@ module.exports = function (opts) {
 						)
 					)
 				)
-					.then(function () {
-						return results;
-					});
+				.then(function () {
+					return results;
+				});
 			})/*
-		 .then(function(results){
-		 temp.cleanup();
-		 return results;
-		 })*/
+			.then(function (results) {
+				temp.cleanup();
+				return results;
+			})*/
 			.then(function (results) {
 				var bundle_file =
 					new File({
 						base: file.base,
-						path: (function () {
-							var basename = path.basename(file.path);
-							basename = basename.split('.');
-							basename.splice(1, 0, 'bundle');
-							basename = basename.join('.');
-							return path.join(path.dirname(file.path), basename);
-						})(),
+						path: bundleFilename,
 						contents: results.contents
 					});
 
@@ -157,40 +152,34 @@ module.exports = function (opts) {
 							);
 						});
 				}
-
-				/* deleting hidden temp files
-				return fs.unlinkAsync(results.temp_path)
-					.then(function () {
-						if (enable_source_map)
-							return fs.unlinkAsync(results.temp_path + '.map');
-						else
-							return Promise.resolve();
-					})
-					.then(function () {      */
-						// Modify config.js bundles if inject option
-						if (!injectOpt) {
+				// Modify config.js bundles if inject option
+				if (!injectOpt) {
+					return bundle_file;
+				}
+				else {
+					console.log('Updating config.js...');
+					return fs.readFileAsync(configJsLoc)
+						.then(function (data) {
+							var filename = bundleFilename.split('/').pop();
+							var replacement = data.toString().replace('".' + filename + '"', '"' + filename + '"');
+							return replacement;
+						})
+						.then(function (data) {
+							return fs.writeFileAsync(configJsLoc, data);
+						})/*
+						.then(function() {
+							return fs.unlinkAsync(results.temp_path)
+								.then(function() {
+									return fs.unlinkAsync(results.temp_path+'.map');
+								})
+						})*/
+						.then(function () {
 							return bundle_file;
-						}
-						else {
-							console.log('Updating config.js...');
-							return fs.readFileAsync(configJsLoc)
-								.then(function (data) {
-									var filename = bundleFilename.split('/').pop();
-									var replacement = data.toString().replace('".' + filename + '"', '"' + filename + '"');
-									return replacement;
-								})
-								.then(function (data) {
-									return fs.writeFileAsync(configJsLoc, data);
-								})
-								.then(function () {
-									return bundle_file;
-								})
-								.catch(function (err) {
-									console.log('ERR: ' + JSON.stringify(err));
-								});
-
-						} // EO else
-					// });
+						})
+						.catch(function (err) {
+							console.log('ERR: ' + JSON.stringify(err));
+						});
+				}
 			})
 			.then(function (bundle_file) {
 				// timeout to stop Promise to catch errors
@@ -211,21 +200,21 @@ function set_jspm_package_path(directory) {
 				'.json': null
 			}
 		})
-			.launch({
-				cwd: directory
-			}, function (env) {
-				if (env.configBase) {
-					jspm.setPackagePath(env.configBase);
-				}
+		.launch({
+			cwd: directory
+		}, function (env) {
+			if (env.configBase) {
+				jspm.setPackagePath(env.configBase);
+			}
 
-				var packageJSON = require(env.configPath);
-				var guard = !!packageJSON && typeof packageJSON.jspm.directories.baseURL !== 'undefined';
-				if (guard) {
-					resolve(path.join(env.configBase, packageJSON.jspm.directories.baseURL));
-				}
-				else {
-					resolve(env.configBase);
-				}
-			});
+			var packageJSON = require(env.configPath);
+			var guard = !!packageJSON && typeof packageJSON.jspm.directories.baseURL !== 'undefined';
+			if (guard) {
+				resolve(path.join(env.configBase, packageJSON.jspm.directories.baseURL));
+			}
+			else {
+				resolve(env.configBase);
+			}
+		});
 	})
 };
