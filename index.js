@@ -208,7 +208,8 @@ function set_jspm_package_path(directory) {
 			}
 
 			var packageJSON = require(env.configPath);
-			var guard = !!packageJSON && typeof packageJSON.jspm.directories.baseURL !== 'undefined';
+			var guard = !!packageJSON && !!packageJSON.jspm &&
+          			!!packageJSON.jspm.directories && !!packageJSON.jspm.directories.baseURL;
 			if (guard) {
 				resolve(path.join(env.configBase, packageJSON.jspm.directories.baseURL));
 			}
