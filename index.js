@@ -52,6 +52,7 @@ module.exports = function (opts) {
 					auxName[auxName.length - 1] = '.' + auxName[auxName.length - 1];
 					return auxName.join('/');
 				})(bundleFilename);
+				tempBundleFile = bundleFilename;
 
 				var promiseTempfile = fs.openAsync(tempBundleFile, 'w+').then(function () {
 					return {
@@ -157,7 +158,7 @@ module.exports = function (opts) {
 						});
 				}
 
-				// deleting hidden temp files
+				/* deleting hidden temp files
 				return fs.unlinkAsync(results.temp_path)
 					.then(function () {
 						if (enable_source_map)
@@ -165,7 +166,7 @@ module.exports = function (opts) {
 						else
 							return Promise.resolve();
 					})
-					.then(function () {
+					.then(function () {      */
 						// Modify config.js bundles if inject option
 						if (!injectOpt) {
 							return bundle_file;
@@ -189,7 +190,7 @@ module.exports = function (opts) {
 								});
 
 						} // EO else
-					});
+					// });
 			})
 			.then(function (bundle_file) {
 				// timeout to stop Promise to catch errors
